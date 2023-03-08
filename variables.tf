@@ -155,7 +155,7 @@ variable "log_prefix" {
 variable "log_bucket_fqdn" {
   type        = string
   default     = ""
-  description = "Optional fqdn of logging bucket, if not supplied a bucket will be generated."
+  description = "Optional fqdn of logging bucket."
 }
 
 variable "log_force_destroy" {

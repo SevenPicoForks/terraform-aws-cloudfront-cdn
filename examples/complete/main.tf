@@ -10,5 +10,5 @@ module "cdn" {
   parent_zone_name   = var.parent_zone_name
   log_force_destroy  = true
 
-  context = module.this.context
+  context = module.context.self
 }

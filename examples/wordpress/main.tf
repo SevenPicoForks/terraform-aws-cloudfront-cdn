@@ -50,5 +50,5 @@ module "cdn" {
     merge(local.wp_nocache_behavior, map("path_pattern", "xmlrpc.php"))
   ]
 
-  context = module.this.context
+  context = module.context.self
 }

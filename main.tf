@@ -1,36 +1,36 @@
 module "origin_label" {
-  source  = "cloudposse/label/null"
-  version = "0.25.0"
+  source  = "SevenPico/context/null"
+  version = "2.0.0"
 
   attributes = ["origin"]
 
-  context = module.this.context
+  context = module.context.self
 }
 
 resource "aws_cloudfront_origin_access_identity" "default" {
-  count = module.this.enabled ? 1 : 0
+  count = module.context.enabled ? 1 : 0
 
   comment = module.origin_label.id
 }
-
-module "logs" {
-  source  = "cloudposse/s3-log-storage/aws"
-  version = "0.26.0"
-
-  enabled                  = module.this.enabled && var.logging_enabled && length(var.log_bucket_fqdn) == 0
-  attributes               = compact(concat(module.this.attributes, ["origin", "logs"]))
-  lifecycle_prefix         = var.log_prefix
-  standard_transition_days = var.log_standard_transition_days
-  glacier_transition_days  = var.log_glacier_transition_days
-  expiration_days          = var.log_expiration_days
-  force_destroy            = var.log_force_destroy
-
-  context = module.this.context
-}
+#
+#module "logs" {
+#  source  = "cloudposse/s3-log-storage/aws"
+#  version = "0.26.0"
+#
+#  enabled                  = module.context.enabled && var.logging_enabled && length(var.log_bucket_fqdn) == 0
+#  attributes               = compact(concat(module.context.attributes, ["origin", "logs"]))
+#  lifecycle_prefix         = var.log_prefix
+#  standard_transition_days = var.log_standard_transition_days
+#  glacier_transition_days  = var.log_glacier_transition_days
+#  expiration_days          = var.log_expiration_days
+#  force_destroy            = var.log_force_destroy
+#
+#  context = module.context.self
+#}
 
 resource "aws_cloudfront_distribution" "default" {
   #bridgecrew:skip=BC_AWS_GENERAL_27:Skipping `Ensure CloudFront distribution has WAF enabled` because AWS WAF is indeed configurable and is managed via `var.web_acl_id`.
-  count = module.this.enabled ? 1 : 0
+  count = module.context.enabled ? 1 : 0
 
   enabled             = var.distribution_enabled
   is_ipv6_enabled     = var.is_ipv6_enabled
@@ -43,7 +43,7 @@ resource "aws_cloudfront_distribution" "default" {
     for_each = var.logging_enabled ? ["true"] : []
     content {
       include_cookies = var.log_include_cookies
-      bucket          = length(var.log_bucket_fqdn) > 0 ? var.log_bucket_fqdn : module.logs.bucket_domain_name
+      bucket          = var.log_bucket_fqdn
       prefix          = var.log_prefix
     }
   }
@@ -62,7 +62,7 @@ resource "aws_cloudfront_distribution" "default" {
 
   origin {
     domain_name = var.origin_domain_name
-    origin_id   = module.this.id
+    origin_id   = module.context.id
     origin_path = var.origin_path
 
     custom_origin_config {
@@ -136,7 +136,7 @@ resource "aws_cloudfront_distribution" "default" {
     cached_methods             = var.cached_methods
     cache_policy_id            = var.cache_policy_id
     origin_request_policy_id   = var.origin_request_policy_id
-    target_origin_id           = module.this.id
+    target_origin_id           = module.context.id
     compress                   = var.compress
     response_headers_policy_id = var.response_headers_policy_id
 
@@ -190,7 +190,7 @@ resource "aws_cloudfront_distribution" "default" {
       cached_methods             = ordered_cache_behavior.value.cached_methods
       cache_policy_id            = ordered_cache_behavior.value.cache_policy_id
       origin_request_policy_id   = ordered_cache_behavior.value.origin_request_policy_id
-      target_origin_id           = ordered_cache_behavior.value.target_origin_id == "" ? module.this.id : ordered_cache_behavior.value.target_origin_id
+      target_origin_id           = ordered_cache_behavior.value.target_origin_id == "" ? module.context.id : ordered_cache_behavior.value.target_origin_id
       compress                   = ordered_cache_behavior.value.compress
       response_headers_policy_id = ordered_cache_behavior.value.response_headers_policy_id
       trusted_signers            = var.trusted_signers
@@ -241,14 +241,14 @@ resource "aws_cloudfront_distribution" "default" {
     }
   }
 
-  tags = module.this.tags
+  tags = module.context.tags
 }
 
 module "dns" {
   source  = "cloudposse/route53-alias/aws"
   version = "0.13.0"
 
-  enabled          = (module.this.enabled && var.dns_aliases_enabled) ? true : false
+  enabled          = (module.context.enabled && var.dns_aliases_enabled) ? true : false
   aliases          = var.aliases
   parent_zone_id   = var.parent_zone_id
   parent_zone_name = var.parent_zone_name
@@ -256,5 +256,5 @@ module "dns" {
   target_zone_id   = try(aws_cloudfront_distribution.default[0].hosted_zone_id, "")
   ipv6_enabled     = var.is_ipv6_enabled
 
-  context = module.this.context
+  context = module.context.legacy
 }
