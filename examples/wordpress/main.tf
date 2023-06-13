@@ -18,6 +18,7 @@ locals {
 }
 
 module "cdn" {
+  #checkov:skip=CKV_AWS_305:skipping 'Ensure Cloudfront distribution has a default root object configured'
   source     = "../../"
   name       = "wordpress"
   attributes = ["cloudposse.com"]
