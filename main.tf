@@ -30,6 +30,8 @@ resource "aws_cloudfront_origin_access_identity" "default" {
 
 resource "aws_cloudfront_distribution" "default" {
   #bridgecrew:skip=BC_AWS_GENERAL_27:Skipping `Ensure CloudFront distribution has WAF enabled` because AWS WAF is indeed configurable and is managed via `var.web_acl_id`.
+  #checkov:skip=CKV2_AWS_32:skipping 'Ensure CloudFront distribution has a response headers policy attached' because it can be configured through 'var.response_headers_policy_id'.
+  #checkov:skip=CKV2_AWS_47:skipping 'Ensure AWS CloudFront attached WAFv2 WebACL is configured with AMR for Log4j Vulnerability' because it is configurable and is managed via `var.web_acl_id`.
   count = module.context.enabled ? 1 : 0
 
   enabled             = var.distribution_enabled

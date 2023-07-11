@@ -1,7 +1,7 @@
-variable "region" {
-  type        = string
-  description = "AWS region"
-}
+#variable "region" {
+#  type        = string
+#  description = "AWS region"
+#}
 
 variable "dns_aliases_enabled" {
   default     = "true"
