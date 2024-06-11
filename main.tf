@@ -64,6 +64,7 @@ resource "aws_cloudfront_distribution" "default" {
     domain_name = var.origin_domain_name
     origin_id   = module.context.id
     origin_path = var.origin_path
+    origin_access_control_id = var.origin_access_control_id
 
     custom_origin_config {
       http_port                = var.origin_http_port
